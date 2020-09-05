@@ -17,13 +17,11 @@ app.use(express.static("public"));
 mongoose.connect("mongodb://localhost:27017/recipeDB", {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 
 const ingredientSchema = {
-    username: String,
-    name: String,
+    name: String
 };
 
 const recipeSchema = {
-    username: String,
-    spoonacularSourceUrl: String,
+    recipeID: String
 };
 
 const userSchema = {
@@ -117,65 +115,89 @@ app.route("/:username/recipies")
         });   
     })
     .post(verifyToken, function(req, res) {
-        const newRecipe = new Recipe({
-            username: req.params.username,
-            spoonacularSourceUrl: req.body.name
-        });
-        newRecipe.save(function(err) {
-            if(!err) {
-                res.send("Successfully added the recipe");
+        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
+            if(err) {
+                res.sendStatus(403);
             } else {
-                res.send(err);
+                const newRecipe = new Recipe({
+                    username: req.params.username,
+                    recipeID: req.body.name
+                });
+                newRecipe.save(function(err) {
+                    if(!err) {
+                        res.send("Successfully added the recipe");
+                    } else {
+                        res.send(err);
+                    }
+                });
             }
-        });
+        }); 
     });
 
 //------------Ingredient Routes------------
 app.route("/:username/ingredients")
     .get(verifyToken, function(req, res) {
-        Ingredient.findOne(
-            {
-                username: req.params.username,
-                name: req.body.name
-            },
-            function(err, foundIngredients) {
-                if(foundIngredients) {
-                    res.send(foundIngredients);
-                } else {
-                    res.send("No Ingredients");
-                }
+        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
+            if(err) {
+                res.sendStatus(403);
+            } else {
+                Ingredient.findOne(
+                    {
+                        username: req.params.username,
+                        name: req.body.name
+                    },
+                    function(err, foundIngredients) {
+                        if(foundIngredients) {
+                            res.send(foundIngredients);
+                        } else {
+                            res.send("No Ingredients");
+                        }
+                    }
+                );
             }
-        );
+        }); 
     })
     .post(verifyToken, function(req, res) {
-        const newIngredient = new Ingredient({
-            username: req.params.username,
-            name: req.body.name
-        });
-        newIngredient.save(function(err) {
-            if(!err) {
-                res.send("Successfully added the ingredients");
+        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
+            if(err) {
+                res.sendStatus(403);
             } else {
-                res.send(err);
+                const newIngredient = new Ingredient({
+                    username: req.params.username,
+                    name: req.body.name
+                });
+                newIngredient.save(function(err) {
+                    if(!err) {
+                        res.send("Successfully added the ingredients");
+                    } else {
+                        res.send(err);
+                    }
+                });
             }
         });
     });
 
 app.route("/:username/ingredients/:ingredientName")
     .delete(verifyToken, function(req, res) {
-        Ingredient.deleteOne(
-            {
-                username: req.params.username,
-                name: req.body.ingredientName   
-            },
-            function(err) {
-                if(!err) {
-                    res.send("Successfully deleted ingredient");
-                } else {
-                    res.send(err);
-                }
+        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
+            if(err) {
+                res.sendStatus(403);
+            } else {
+                Ingredient.deleteOne(
+                    {
+                        username: req.params.username,
+                        name: req.body.ingredientName   
+                    },
+                    function(err) {
+                        if(!err) {
+                            res.send("Successfully deleted ingredient");
+                        } else {
+                            res.send(err);
+                        }
+                    }
+                );
             }
-        );
+        });  
     });
 
 //------------Verify Token------------
