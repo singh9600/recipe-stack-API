@@ -45,6 +45,7 @@ const User = mongoose.model("User", userSchema);
 //------------User Authentication------------
 app.route("/user/login")
     .post(async function(req, res) {
+        res.header("Access-Control-Allow-Origin", '*');
         User.findOne(
             {
                 username: req.body.username,
@@ -222,7 +223,7 @@ function verifyToken(req, res, next) {
 
 let port = process.env.PORT;
 if (port == null || port == "") {
-  port = 8000;
+  port = 3000;
 }
 
 app.listen(port, function() {
