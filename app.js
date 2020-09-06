@@ -143,11 +143,12 @@ app.route("/recipies")
 //------------Ingredient Routes------------
 app.route("/ingredients")
     .get(verifyToken, function(req, res) {
-        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
+                res.header("Access-Control-Allow-Origin", '*');
                 res.sendStatus(403);
             } else {
+                res.header("Access-Control-Allow-Origin", '*');
                 Ingredient.find(
                     {
                         username: req.body.username,
