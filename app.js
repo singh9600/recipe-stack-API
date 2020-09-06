@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
+const cors = require('cors')
 require("dotenv").config();
 
 const app = express();
@@ -41,6 +42,8 @@ const userSchema = {
 const Ingredient = mongoose.model("Ingredient", ingredientSchema);
 const Recipe = mongoose.model("Recipe", recipeSchema);
 const User = mongoose.model("User", userSchema);
+
+app.use(cors());
 
 //------------User Authentication------------
 app.route("/user/login")
@@ -104,7 +107,6 @@ app.route("/spoonacularRecipe")
 //------------Recipe Routes------------
 app.route("/recipies")
     .get(verifyToken, function(req, res) {
-        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
@@ -120,7 +122,6 @@ app.route("/recipies")
         });   
     })
     .post(verifyToken, function(req, res) {
-        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
@@ -141,14 +142,37 @@ app.route("/recipies")
     });
 
 //------------Ingredient Routes------------
+app.post("/getIngredients", verifyToken, function(req, res) {
+    jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
+        if(err) {
+            // res.header("Access-Control-Allow-Origin", '*');
+            res.sendStatus(403);
+        } else {
+            // res.header("Access-Control-Allow-Origin", '*');
+            Ingredient.find(
+                {
+                    username: req.body.username,
+                },
+                function(err, foundIngredients) {
+                    if(foundIngredients) {
+                        res.send(foundIngredients);
+                    } else {
+                        res.send("No Ingredients");
+                    }
+                }
+            );
+        }
+    });
+});
+
 app.route("/ingredients")
     .get(verifyToken, function(req, res) {
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
-                res.header("Access-Control-Allow-Origin", '*');
+                // res.header("Access-Control-Allow-Origin", '*');
                 res.sendStatus(403);
             } else {
-                res.header("Access-Control-Allow-Origin", '*');
+                // res.header("Access-Control-Allow-Origin", '*');
                 Ingredient.find(
                     {
                         username: req.body.username,
@@ -165,7 +189,6 @@ app.route("/ingredients")
         }); 
     })
     .post(verifyToken, function(req, res) {
-        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
@@ -185,9 +208,8 @@ app.route("/ingredients")
         });
     });
 
-app.route("/ingredients/:ingredientName")
+app.route("/ingredients")
     .delete(verifyToken, function(req, res) {
-        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
