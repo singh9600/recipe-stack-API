@@ -14,13 +14,15 @@ app.use(bodyParser.urlencoded({
 
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost:27017/recipeDB", {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
+mongoose.connect(`mongodb+srv://admin-harpreet:${process.env.MONGODB_PASS}@cluster0.yzzoo.mongodb.net/recipeDB`, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 
 const ingredientSchema = {
+    username: String,
     name: String
 };
 
 const recipeSchema = {
+    username: String,
     recipeID: String
 };
 
@@ -88,8 +90,9 @@ app.route("/user/signup")
 //------------Get Recipe from Spoonacular------------
 app.route("/spoonacularRecipe")
     .get(function(req, res) {
+        const ingredientStr = req.body.ingredientStr;
         const apiKey = process.env.API_KEY;
-        axios.get(`https://api.spoonacular.com/recipes/random?apiKey=${apiKey}&number=1`)
+        axios.get(`https://api.spoonacular.com/recipes/random?apiKey=${apiKey}&ingredients=${ingredientStr}&number=1`)
             .then(function (response) {
                 res.send(response.data);
             })
@@ -98,7 +101,7 @@ app.route("/spoonacularRecipe")
             });
     });
 //------------Recipe Routes------------
-app.route("/:username/recipies")
+app.route("/recipies")
     .get(verifyToken, function(req, res) {
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
@@ -120,7 +123,7 @@ app.route("/:username/recipies")
                 res.sendStatus(403);
             } else {
                 const newRecipe = new Recipe({
-                    username: req.params.username,
+                    username: req.body.username,
                     recipeID: req.body.name
                 });
                 newRecipe.save(function(err) {
@@ -135,7 +138,7 @@ app.route("/:username/recipies")
     });
 
 //------------Ingredient Routes------------
-app.route("/:username/ingredients")
+app.route("/ingredients")
     .get(verifyToken, function(req, res) {
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
@@ -143,7 +146,7 @@ app.route("/:username/ingredients")
             } else {
                 Ingredient.findOne(
                     {
-                        username: req.params.username,
+                        username: req.body.username,
                         name: req.body.name
                     },
                     function(err, foundIngredients) {
@@ -163,7 +166,7 @@ app.route("/:username/ingredients")
                 res.sendStatus(403);
             } else {
                 const newIngredient = new Ingredient({
-                    username: req.params.username,
+                    username: req.body.username,
                     name: req.body.name
                 });
                 newIngredient.save(function(err) {
@@ -177,7 +180,7 @@ app.route("/:username/ingredients")
         });
     });
 
-app.route("/:username/ingredients/:ingredientName")
+app.route("/ingredients/:ingredientName")
     .delete(verifyToken, function(req, res) {
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
@@ -185,7 +188,7 @@ app.route("/:username/ingredients/:ingredientName")
             } else {
                 Ingredient.deleteOne(
                     {
-                        username: req.params.username,
+                        username: req.body.username,
                         name: req.body.ingredientName   
                     },
                     function(err) {
