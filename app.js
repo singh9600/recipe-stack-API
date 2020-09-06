@@ -145,10 +145,9 @@ app.route("/ingredients")
             if(err) {
                 res.sendStatus(403);
             } else {
-                Ingredient.findOne(
+                Ingredient.find(
                     {
                         username: req.body.username,
-                        name: req.body.name
                     },
                     function(err, foundIngredients) {
                         if(foundIngredients) {
