@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({
 
 app.use(express.static("public"));
 
-mongoose.connect(`mongodb+srv://admin-harpreet:${process.env.MONGODB_PASS}@cluster0.yzzoo.mongodb.net/recipeDB`, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
+mongoose.connect(`mongodb+srv://admin-harpreet:${process.env.MONGODB_PASS}@cluster0.yzzoo.mongodb.net/recipeDB`, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
 const ingredientSchema = {
     username: String,
@@ -47,16 +47,16 @@ app.use(cors());
 
 //------------User Authentication------------
 app.route("/user/login")
-    .post(async function(req, res) {
+    .post(async function (req, res) {
         res.header("Access-Control-Allow-Origin", '*');
         User.findOne(
             {
                 username: req.body.username,
             },
-            async function(err, foundUser) {
-                if(foundUser) {
-                    if(await bcrypt.compare(req.body.password ,foundUser.password)) {
-                        jwt.sign({user: foundUser}, process.env.JWT_KEY, function(err, token) {
+            async function (err, foundUser) {
+                if (foundUser) {
+                    if (await bcrypt.compare(req.body.password, foundUser.password)) {
+                        jwt.sign({ user: foundUser }, process.env.JWT_KEY, function (err, token) {
                             res.json({
                                 token: token
                             });
@@ -72,7 +72,7 @@ app.route("/user/login")
     });
 
 app.route("/user/signup")
-    .post(async function(req, res) {
+    .post(async function (req, res) {
         try {
             const salt = await bcrypt.genSalt();
             const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -80,8 +80,8 @@ app.route("/user/signup")
                 username: req.body.username,
                 password: hashedPassword
             });
-            newUser.save(function(err) {
-                if(!err) {
+            newUser.save(function (err) {
+                if (!err) {
                     res.send("Successfully added the user");
                 } else {
                     res.send(err);
@@ -93,58 +93,67 @@ app.route("/user/signup")
     });
 //------------Get Recipe from Spoonacular------------
 app.route("/spoonacularRecipe")
-    .get(function(req, res) {
+    .post(function (req, res) {
         const ingredientStr = req.body.ingredientStr;
         const apiKey = process.env.API_KEY;
-        axios.get(`https://api.spoonacular.com/recipes/random?apiKey=${apiKey}&ingredients=${ingredientStr}&number=1`)
+        axios.get(`https://api.spoonacular.com/recipes/findByIngredients?apiKey=${apiKey}&ingredients=${ingredientStr}&number=1`)
             .then(function (response) {
-                res.send(response.data);
+                let id = response.data[0].id;
+                axios.get(`https://api.spoonacular.com/recipes/${id}/summary?apiKey=${apiKey}`)
+                    .then(function (response) {
+                        res.send(response.data);
+                    })
+                    .catch(function (err) {
+                        res.send(err);
+                    });
+                // console.log(response.data[0].id);
+                // res.send(response.data);
             })
-            .catch(function(err) {
+            .catch(function (err) {
                 res.send(err);
             });
     });
 //------------Recipe Routes------------
 app.route("/recipies")
-    .get(verifyToken, function(req, res) {
-        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
-            if(err) {
+    .get(verifyToken, function (req, res) {
+        jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+            if (err) {
                 res.sendStatus(403);
             } else {
-                Recipe.find(function(err, foundRecipes) {
-                    if(foundRecipes) {
+                Recipe.find(function (err, foundRecipes) {
+                    if (foundRecipes) {
                         res.send(foundRecipes);
                     } else {
                         res.send("No Recipes");
                     }
                 });
             }
-        });   
+        });
     })
-    .post(verifyToken, function(req, res) {
-        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
-            if(err) {
+    .post(verifyToken, function (req, res) {
+        jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+            if (err) {
                 res.sendStatus(403);
             } else {
                 const newRecipe = new Recipe({
                     username: req.body.username,
                     recipeID: req.body.name
                 });
-                newRecipe.save(function(err) {
-                    if(!err) {
+                newRecipe.save(function (err) {
+                    if (!err) {
                         res.send("Successfully added the recipe");
                     } else {
                         res.send(err);
                     }
                 });
             }
-        }); 
+        });
     });
 
 //------------Ingredient Routes------------
-app.post("/getIngredients", verifyToken, function(req, res) {
-    jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
-        if(err) {
+app.post("/getIngredients", verifyToken, function (req, res) {
+    jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+        if (err) {
             // res.header("Access-Control-Allow-Origin", '*');
             res.sendStatus(403);
         } else {
@@ -153,8 +162,8 @@ app.post("/getIngredients", verifyToken, function(req, res) {
                 {
                     username: req.body.username,
                 },
-                function(err, foundIngredients) {
-                    if(foundIngredients) {
+                function (err, foundIngredients) {
+                    if (foundIngredients) {
                         res.send(foundIngredients);
                     } else {
                         res.send("No Ingredients");
@@ -166,9 +175,9 @@ app.post("/getIngredients", verifyToken, function(req, res) {
 });
 
 app.route("/ingredients")
-    .get(verifyToken, function(req, res) {
-        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
-            if(err) {
+    .get(verifyToken, function (req, res) {
+        jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+            if (err) {
                 // res.header("Access-Control-Allow-Origin", '*');
                 res.sendStatus(403);
             } else {
@@ -177,8 +186,8 @@ app.route("/ingredients")
                     {
                         username: req.body.username,
                     },
-                    function(err, foundIngredients) {
-                        if(foundIngredients) {
+                    function (err, foundIngredients) {
+                        if (foundIngredients) {
                             res.send(foundIngredients);
                         } else {
                             res.send("No Ingredients");
@@ -186,19 +195,19 @@ app.route("/ingredients")
                     }
                 );
             }
-        }); 
+        });
     })
-    .post(verifyToken, function(req, res) {
-        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
-            if(err) {
+    .post(verifyToken, function (req, res) {
+        jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+            if (err) {
                 res.sendStatus(403);
             } else {
                 const newIngredient = new Ingredient({
                     username: req.body.username,
                     name: req.body.name
                 });
-                newIngredient.save(function(err) {
-                    if(!err) {
+                newIngredient.save(function (err) {
+                    if (!err) {
                         res.send("Successfully added the ingredients");
                     } else {
                         res.send(err);
@@ -209,18 +218,18 @@ app.route("/ingredients")
     });
 
 app.route("/ingredients")
-    .delete(verifyToken, function(req, res) {
-        jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
-            if(err) {
+    .delete(verifyToken, function (req, res) {
+        jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+            if (err) {
                 res.sendStatus(403);
             } else {
                 Ingredient.deleteOne(
                     {
                         username: req.body.username,
-                        name: req.body.ingredientName   
+                        name: req.body.ingredientName
                     },
-                    function(err) {
-                        if(!err) {
+                    function (err) {
+                        if (!err) {
                             res.send("Successfully deleted ingredient");
                         } else {
                             res.send(err);
@@ -228,17 +237,17 @@ app.route("/ingredients")
                     }
                 );
             }
-        });  
+        });
     });
 
-app.get("/", function(req, res) {
+app.get("/", function (req, res) {
     res.send("This is the root");
 });
 
 //------------Verify Token------------
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
-    if(typeof bearerHeader !== 'undefined') {
+    if (typeof bearerHeader !== 'undefined') {
         const bearer = bearerHeader.split(' ');
         const bearerToken = bearer[1];
         req.token = bearerToken;
@@ -250,9 +259,9 @@ function verifyToken(req, res, next) {
 
 let port = process.env.PORT;
 if (port == null || port == "") {
-  port = 3000;
+    port = 3000;
 }
 
-app.listen(port, function() {
+app.listen(port, function () {
     console.log("Server has started");
 });
