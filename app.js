@@ -203,6 +203,10 @@ app.route("/ingredients/:ingredientName")
         });  
     });
 
+app.get("/", function(req, res) {
+    res.send("This is the root");
+});
+
 //------------Verify Token------------
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
@@ -222,5 +226,5 @@ if (port == null || port == "") {
 }
 
 app.listen(port, function() {
-    console.log("Server has started successfully");
+    console.log("Server has started");
 });
