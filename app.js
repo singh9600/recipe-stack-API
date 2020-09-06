@@ -104,6 +104,7 @@ app.route("/spoonacularRecipe")
 //------------Recipe Routes------------
 app.route("/recipies")
     .get(verifyToken, function(req, res) {
+        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
@@ -119,6 +120,7 @@ app.route("/recipies")
         });   
     })
     .post(verifyToken, function(req, res) {
+        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
@@ -141,6 +143,7 @@ app.route("/recipies")
 //------------Ingredient Routes------------
 app.route("/ingredients")
     .get(verifyToken, function(req, res) {
+        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
@@ -161,6 +164,7 @@ app.route("/ingredients")
         }); 
     })
     .post(verifyToken, function(req, res) {
+        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
@@ -182,6 +186,7 @@ app.route("/ingredients")
 
 app.route("/ingredients/:ingredientName")
     .delete(verifyToken, function(req, res) {
+        res.header("Access-Control-Allow-Origin", '*');
         jwt.verify(req.token, process.env.JWT_KEY, function(err, authData) {
             if(err) {
                 res.sendStatus(403);
