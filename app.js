@@ -24,6 +24,7 @@ const ingredientSchema = {
 
 const recipeSchema = {
     username: String,
+    title: String,
     recipeID: String
 };
 
@@ -113,42 +114,81 @@ app.route("/spoonacularRecipe")
                 res.send(err);
             });
     });
+
+app.route("/spoonacularRecipe/:recipeID")
+    .post(function (req, res) {
+        const apiKey = process.env.API_KEY;
+        axios.get(`https://api.spoonacular.com/recipes/${req.params.recipeID}/summary?apiKey=${apiKey}`)
+            .then(function (response) {
+                res.send(response.data);
+            })
+            .catch(function (err) {
+                res.send(err);
+            });
+    });
 //------------Recipe Routes------------
-app.route("/recipies")
-    .get(verifyToken, function (req, res) {
-        jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
-            if (err) {
-                res.sendStatus(403);
-            } else {
-                Recipe.find(function (err, foundRecipes) {
+app.post("/getrecipes", verifyToken, function (req, res) {
+    jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            Recipe.find(
+                {
+                    username: req.body.username,
+                },
+                function (err, foundRecipes) {
                     if (foundRecipes) {
                         res.send(foundRecipes);
                     } else {
                         res.send("No Recipes");
                     }
                 });
-            }
-        });
-    })
-    .post(verifyToken, function (req, res) {
-        jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
-            if (err) {
-                res.sendStatus(403);
-            } else {
-                const newRecipe = new Recipe({
+        }
+    });
+});
+
+app.post("/recipes", verifyToken, function (req, res) {
+    jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            const newRecipe = new Recipe({
+                username: req.body.username,
+                title: req.body.title,
+                recipeID: req.body.id
+            });
+            newRecipe.save(function (err) {
+                if (!err) {
+                    res.send("Successfully added the recipe");
+                } else {
+                    res.send(err);
+                }
+            });
+        }
+    });
+});
+
+app.delete("/recipes", verifyToken, function (req, res) {
+    jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            Recipe.deleteOne(
+                {
                     username: req.body.username,
-                    recipeID: req.body.name
-                });
-                newRecipe.save(function (err) {
+                    recipeID: req.body.id
+                },
+                function (err) {
                     if (!err) {
-                        res.send("Successfully added the recipe");
+                        res.send("Successfully deleted recipe");
                     } else {
                         res.send(err);
                     }
-                });
-            }
-        });
+                }
+            );
+        }
     });
+});
 
 //------------Ingredient Routes------------
 app.post("/getIngredients", verifyToken, function (req, res) {
@@ -175,28 +215,6 @@ app.post("/getIngredients", verifyToken, function (req, res) {
 });
 
 app.route("/ingredients")
-    .get(verifyToken, function (req, res) {
-        jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
-            if (err) {
-                // res.header("Access-Control-Allow-Origin", '*');
-                res.sendStatus(403);
-            } else {
-                // res.header("Access-Control-Allow-Origin", '*');
-                Ingredient.find(
-                    {
-                        username: req.body.username,
-                    },
-                    function (err, foundIngredients) {
-                        if (foundIngredients) {
-                            res.send(foundIngredients);
-                        } else {
-                            res.send("No Ingredients");
-                        }
-                    }
-                );
-            }
-        });
-    })
     .post(verifyToken, function (req, res) {
         jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
             if (err) {
@@ -215,9 +233,7 @@ app.route("/ingredients")
                 });
             }
         });
-    });
-
-app.route("/ingredients")
+    })
     .delete(verifyToken, function (req, res) {
         jwt.verify(req.token, process.env.JWT_KEY, function (err, authData) {
             if (err) {
