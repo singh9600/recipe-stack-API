@@ -10,5 +10,3 @@ This is a web app that helps you find recipies based on the ingredients you have
 - Database: MongoDB
 - Frontend: VueJS
 - API for recipies: Spoonacular
-
-##### This API uses JWT authentication
